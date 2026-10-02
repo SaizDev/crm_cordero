@@ -1,0 +1,15 @@
+{
+  "generatedBy": "pnpm db:sync (scripts/db/lib/generate-artifacts.mjs)",
+  "csv": {
+    "format": "RFC 4180, UTF-8, header row",
+    "null": "unquoted empty field",
+    "emptyString": "quoted empty field \"\"",
+    "timestamps": "ISO 8601; timestamptz converted to UTC with Z suffix",
+    "boolean": "1 or 0",
+    "bytea": "base64",
+    "arrays": "JSON array text",
+    "json": "JSON text"
+  },
+  "loadOrderCycles": [],
+  "tables": []
+}

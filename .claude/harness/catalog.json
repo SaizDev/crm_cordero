@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "profiles": {
+    "full": {
+      "description": "Maximum harness: complete product team, every guardrail, all recommended MCP servers, plugins and skills.",
+      "policies": {
+        "specGate": { "mode": "strict" },
+        "ownership": { "mode": "enforce" },
+        "delegation": { "requireBrief": true },
+        "stopGate": { "dbDrift": "block", "typecheck": true, "lint": true, "reviewAfterCodeChange": true }
+      }
+    },
+    "standard": {
+      "description": "Full team without the technical writer; strict spec gate; lighter stop gate (no lint, no mandatory review before stopping).",
+      "policies": {
+        "specGate": { "mode": "strict" },
+        "ownership": { "mode": "enforce" },
+        "delegation": { "requireBrief": true },
+        "stopGate": { "dbDrift": "block", "typecheck": true, "lint": false, "reviewAfterCodeChange": false }
+      }
+    },
+    "lean": {
+      "description": "Core engineering team plus designer, QA and code reviewer; spec gate warns instead of blocking.",
+      "policies": {
+        "specGate": { "mode": "warn" },
+        "ownership": { "mode": "enforce" },
+        "delegation": { "requireBrief": false },
+        "stopGate": { "dbDrift": "warn", "typecheck": false, "lint": false, "reviewAfterCodeChange": false }
+      }
+    },
+    "minimal": {
+      "description": "The four required agents (architecture, database, backend, frontend), safety guards, spec templates and the DB portability tooling.",
+      "policies": {
+        "specGate": { "mode": "off" },
+        "ownership": { "mode": "enforce" },
+        "delegation": { "requireBrief": false },
+        "stopGate": { "dbDrift": "warn", "typecheck": false, "lint": false, "reviewAfterCodeChange": false }
+      }
+    }
+  },
+  "modelPresets": {
+    "balanced": {
+      "description": "Opus for reasoning-heavy roles, Sonnet for implementation and documentation.",
+      "models": {
+        "product-manager": "opus",
+        "solution-architect": "opus",
+        "database-architect": "opus",
+        "security-auditor": "opus",
+        "code-reviewer": "opus",
+        "backend-engineer": "sonnet",
+        "frontend-engineer": "sonnet",
+        "ux-ui-designer": "sonnet",
+        "qa-engineer": "sonnet",
+        "devops-engineer": "sonnet",
+        "technical-writer": "sonnet"
+      }
+    },
+    "quality": {
+      "description": "Opus for every agent.",
+      "models": { "*": "opus" }
+    },
+    "inherit": {
+      "description": "Every agent uses the model of the main session.",
+      "models": { "*": "inherit" }
+    },
+    "economy": {
+      "description": "Sonnet for every role, Haiku for documentation.",
+      "models": { "*": "sonnet", "technical-writer": "haiku" }
+    }
+  },
+  "modules": [
+    { "id": "agent.solution-architect", "kind": "agent", "name": "solution-architect", "required": true, "profiles": ["full", "standard", "lean", "minimal"], "skills": [], "description": "Architecture, technical design, ADRs, task planning." },
+    { "id": "agent.database-architect", "kind": "agent", "name": "database-architect", "required": true, "profiles": ["full", "standard", "lean", "minimal"], "skills": ["supabase-postgres-best-practices", "supabase"], "description": "Schema, migrations, RLS, DB tests, portability artifacts." },
+    { "id": "agent.backend-engineer", "kind": "agent", "name": "backend-engineer", "required": true, "profiles": ["full", "standard", "lean", "minimal"], "skills": ["supabase"], "description": "Server code: data access layer, server actions, route handlers, auth, integrations." },
+    { "id": "agent.frontend-engineer", "kind": "agent", "name": "frontend-engineer", "required": true, "profiles": ["full", "standard", "lean", "minimal"], "skills": ["vercel-react-best-practices", "vercel-composition-patterns", "next-dev-loop"], "description": "Pages, client state, forms, data wiring, runtime verification." },
+    { "id": "agent.ux-ui-designer", "kind": "agent", "name": "ux-ui-designer", "profiles": ["full", "standard", "lean"], "fallback": ["frontend-engineer"], "skills": ["web-design-guidelines"], "description": "Design system, tokens, UI specs, primitives, accessibility." },
+    { "id": "agent.product-manager", "kind": "agent", "name": "product-manager", "profiles": ["full", "standard"], "fallback": ["main"], "skills": [], "description": "Vision, roadmap, requirement specs and acceptance criteria." },
+    { "id": "agent.qa-engineer", "kind": "agent", "name": "qa-engineer", "profiles": ["full", "standard", "lean"], "fallback": ["frontend-engineer", "backend-engineer"], "skills": ["next-dev-loop", "web-design-guidelines"], "description": "Test plans, unit/integration/e2e/pgTAP tests, verification reports." },
+    { "id": "agent.security-auditor", "kind": "agent", "name": "security-auditor", "profiles": ["full", "standard"], "fallback": ["code-reviewer", "solution-architect"], "skills": ["supabase"], "description": "Read-only security review: OWASP, RLS, secrets, headers, dependencies." },
+    { "id": "agent.code-reviewer", "kind": "agent", "name": "code-reviewer", "profiles": ["full", "standard", "lean"], "fallback": ["solution-architect"], "skills": ["vercel-react-best-practices"], "description": "Read-only quality and spec-conformance review." },
+    { "id": "agent.devops-engineer", "kind": "agent", "name": "devops-engineer", "profiles": ["full", "standard"], "fallback": ["backend-engineer"], "skills": [], "description": "Vercel, CI/CD, environments, migration deploys, observability." },
+    { "id": "agent.technical-writer", "kind": "agent", "name": "technical-writer", "profiles": ["full"], "fallback": ["main"], "skills": [], "description": "README, guides, changelog, release notes." },
+
+    { "id": "check.bash-guard", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Blocks destructive, remote-write, secret-reading and approval-bypassing shell commands; enforces ownership on shell writes." },
+    { "id": "check.content-guard", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Blocks secrets, env files, client-side secret use and unsafe server-only boundaries in edits." },
+    { "id": "check.migration-guard", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Migration naming, immutability after commit, RLS, security-invoker views, safe SECURITY DEFINER, destructive-change markers." },
+    { "id": "check.ownership", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Path ownership: the main agent must delegate; each agent writes only its zones." },
+    { "id": "check.spec-gate", "kind": "check", "profiles": ["full", "standard", "lean"], "description": "Code edits require an active, human-approved, unchanged spec (plus design and tasks for features)." },
+    { "id": "check.chat-approval", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Lets the human approve a spec by typing only \"approve spec <id>\" in the chat. The hook records it; Claude and agents cannot trigger it." },
+    { "id": "check.delegation", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Only the orchestrator delegates, disabled agents are refused with their fallback, and (when the profile policy requires it) briefs carry Spec, Task and Deliverables." },
+    { "id": "check.handoff", "kind": "check", "profiles": ["full", "standard", "lean"], "description": "Team agents must finish with a structured Handoff block." },
+    { "id": "check.mcp-guard", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Blocks ad-hoc DDL through database MCP tools (schema changes must be migrations)." },
+    { "id": "check.db-autosync", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "After a migration or seed.sql is written, rebuilds every database artifact offline (pnpm db:sync) and reports the result or the failing line." },
+    { "id": "check.format", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Formats edited files with Prettier when available." },
+    { "id": "check.context", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Injects harness state (profile, active spec, next tasks, DB sync) at session and subagent start." },
+    { "id": "check.stop-gate", "kind": "check", "profiles": ["full", "standard", "lean", "minimal"], "description": "Before finishing: DB artifacts in sync, typecheck and lint pass, reviews done (per profile policy)." },
+    { "id": "check.notify", "kind": "check", "profiles": ["full", "standard"], "description": "Desktop or terminal notification when Claude needs you." },
+    { "id": "check.activity-log", "kind": "check", "profiles": ["full", "standard"], "description": "Audit log of guard decisions, edits and agent runs in .claude/harness/state/activity.jsonl." },
+
+    { "id": "skill.spec-new", "kind": "workflow-skill", "name": "spec-new", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.spec-review", "kind": "workflow-skill", "name": "spec-review", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.spec-approve", "kind": "workflow-skill", "name": "spec-approve", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.spec-design", "kind": "workflow-skill", "name": "spec-design", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.spec-plan", "kind": "workflow-skill", "name": "spec-plan", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.spec-implement", "kind": "workflow-skill", "name": "spec-implement", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.spec-verify", "kind": "workflow-skill", "name": "spec-verify", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.spec-ship", "kind": "workflow-skill", "name": "spec-ship", "profiles": ["full", "standard"] },
+    { "id": "skill.spec-bugfix", "kind": "workflow-skill", "name": "spec-bugfix", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.db-change", "kind": "workflow-skill", "name": "db-change", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.db-sync", "kind": "workflow-skill", "name": "db-sync", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.db-export", "kind": "workflow-skill", "name": "db-export", "profiles": ["full", "standard", "lean", "minimal"] },
+    { "id": "skill.adr-new", "kind": "workflow-skill", "name": "adr-new", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.progress", "kind": "workflow-skill", "name": "progress", "profiles": ["full", "standard", "lean"] },
+    { "id": "skill.harness", "kind": "workflow-skill", "name": "harness", "required": true, "profiles": ["full", "standard", "lean", "minimal"] },
+
+    {
+      "id": "mcp.supabase",
+      "kind": "mcp",
+      "server": "supabase",
+      "profiles": ["full", "standard", "lean", "minimal"],
+      "requires": ["stack.supabase.projectRef"],
+      "description": "Supabase MCP for this project's Supabase project (read-only). Added to .mcp.json once the project ref is set: pnpm harness supabase <project-ref>.",
+      "definition": {
+        "type": "http",
+        "url": "https://mcp.supabase.com/mcp?project_ref={{stack.supabase.projectRef}}&read_only=true"
+      }
+    },
+    {
+      "id": "mcp.vercel",
+      "kind": "mcp",
+      "server": "vercel",
+      "profiles": ["full", "standard"],
+      "description": "Official Vercel MCP (OAuth): docs, projects, deployments, build and runtime logs. Deploy and purchase tools are denied in settings.",
+      "definition": { "type": "http", "url": "https://mcp.vercel.com" }
+    },
+    {
+      "id": "mcp.next-devtools",
+      "kind": "mcp",
+      "server": "next-devtools",
+      "profiles": ["full", "standard", "lean"],
+      "description": "Next.js 16+ dev server introspection: errors, routes, logs, server actions, compilation issues.",
+      "definition": { "type": "stdio", "command": "npx", "args": ["-y", "next-devtools-mcp@latest"] }
+    },
+    {
+      "id": "mcp.context7",
+      "kind": "mcp",
+      "server": "context7",
+      "profiles": ["full", "standard", "lean", "minimal"],
+      "description": "Version-accurate library documentation lookup. Optional CONTEXT7_API_KEY raises rate limits.",
+      "definition": { "type": "http", "url": "https://mcp.context7.com/mcp", "headers": { "Authorization": "${CONTEXT7_API_KEY:-}" } }
+    },
+    {
+      "id": "mcp.playwright",
+      "kind": "mcp",
+      "server": "playwright",
+      "profiles": ["full", "standard", "lean"],
+      "description": "Browser automation for UI verification and end-to-end checks (isolated profile).",
+      "definition": { "type": "stdio", "command": "npx", "args": ["-y", "@playwright/mcp@latest", "--isolated"] }
+    },
+    {
+      "id": "mcp.shadcn",
+      "kind": "mcp",
+      "server": "shadcn",
+      "profiles": ["full", "standard"],
+      "description": "shadcn/ui registry: browse, search and add components.",
+      "definition": { "type": "stdio", "command": "npx", "args": ["-y", "shadcn@latest", "mcp"] }
+    },
+    {
+      "id": "mcp.chrome-devtools",
+      "kind": "mcp",
+      "server": "chrome-devtools",
+      "profiles": ["full"],
+      "description": "Chrome DevTools: performance traces, network analysis, Core Web Vitals.",
+      "definition": { "type": "stdio", "command": "npx", "args": ["-y", "chrome-devtools-mcp@latest", "--isolated"] }
+    },
+    {
+      "id": "mcp.github",
+      "kind": "mcp",
+      "server": "github",
+      "profiles": [],
+      "requiresEnv": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+      "description": "Optional GitHub MCP (needs GITHUB_PERSONAL_ACCESS_TOKEN). The gh CLI covers most needs.",
+      "definition": { "type": "http", "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}" } }
+    },
+
+    { "id": "plugin.typescript-lsp", "kind": "plugin", "plugin": "typescript-lsp@claude-plugins-official", "profiles": ["full", "standard", "lean"], "prereq": "npm install -g typescript-language-server typescript", "description": "TypeScript language server: diagnostics, definitions, references." },
+    { "id": "plugin.frontend-design", "kind": "plugin", "plugin": "frontend-design@claude-plugins-official", "profiles": ["full", "standard", "lean"], "description": "Anthropic skill for distinctive, production-grade UI." },
+    { "id": "plugin.security-guidance", "kind": "plugin", "plugin": "security-guidance@claude-plugins-official", "profiles": ["full", "standard"], "prereq": "python3 on PATH", "description": "Pattern warnings on edits plus background LLM security review of diffs and commits." },
+    { "id": "plugin.commit-commands", "kind": "plugin", "plugin": "commit-commands@claude-plugins-official", "profiles": ["full", "standard", "lean"], "description": "/commit, /commit-push-pr and branch cleanup commands." },
+    { "id": "plugin.code-review", "kind": "plugin", "plugin": "code-review@claude-plugins-official", "profiles": ["full", "standard"], "description": "/code-review multi-agent pull request review." },
+    { "id": "plugin.claude-md-management", "kind": "plugin", "plugin": "claude-md-management@claude-plugins-official", "profiles": ["full", "standard"], "description": "Audit CLAUDE.md and capture session learnings." },
+    { "id": "plugin.claude-security", "kind": "plugin", "plugin": "claude-security@claude-plugins-official", "profiles": ["full"], "description": "Deep, verified vulnerability scans with threat modeling and optional patches." },
+    { "id": "plugin.hookify", "kind": "plugin", "plugin": "hookify@claude-plugins-official", "profiles": ["full"], "description": "Create extra project rules as lightweight hooks from plain language." },
+    { "id": "plugin.pr-review-toolkit", "kind": "plugin", "plugin": "pr-review-toolkit@claude-plugins-official", "profiles": [], "description": "Optional: six specialized PR review agents (overlaps with code-reviewer)." },
+    { "id": "plugin.vercel", "kind": "plugin", "plugin": "vercel@claude-plugins-official", "profiles": [], "description": "Optional: Vercel skills, commands and agents. Bundles its own Vercel MCP, so disable mcp.vercel if you enable it." },
+    { "id": "plugin.semgrep", "kind": "plugin", "plugin": "semgrep@claude-plugins-official", "profiles": [], "description": "Optional: Semgrep scanning (needs a Semgrep account)." },
+    { "id": "plugin.sentry", "kind": "plugin", "plugin": "sentry@claude-plugins-official", "profiles": [], "description": "Optional: Sentry error monitoring integration." },
+    { "id": "plugin.posthog", "kind": "plugin", "plugin": "posthog@claude-plugins-official", "profiles": [], "description": "Optional: PostHog analytics and feature flags." },
+    { "id": "plugin.stripe", "kind": "plugin", "plugin": "stripe@claude-plugins-official", "profiles": [], "description": "Optional: Stripe development plugin." },
+    { "id": "plugin.resend", "kind": "plugin", "plugin": "resend@claude-plugins-official", "profiles": [], "description": "Optional: Resend email skills." },
+
+    { "id": "vskill.supabase", "kind": "vendored-skill", "skill": "supabase", "source": "supabase/agent-skills", "profiles": ["full", "standard"], "description": "Supabase official skill: products, CLI, MCP, security checklist." },
+    { "id": "vskill.supabase-postgres-best-practices", "kind": "vendored-skill", "skill": "supabase-postgres-best-practices", "source": "supabase/agent-skills", "profiles": ["full", "standard", "lean", "minimal"], "description": "Postgres schema, index, RLS and query best practices." },
+    { "id": "vskill.vercel-react-best-practices", "kind": "vendored-skill", "skill": "vercel-react-best-practices", "source": "vercel-labs/agent-skills", "profiles": ["full", "standard", "lean"], "description": "React and Next.js performance rules from Vercel." },
+    { "id": "vskill.vercel-composition-patterns", "kind": "vendored-skill", "skill": "vercel-composition-patterns", "source": "vercel-labs/agent-skills", "profiles": ["full"], "description": "React composition patterns for scalable component APIs." },
+    { "id": "vskill.web-design-guidelines", "kind": "vendored-skill", "skill": "web-design-guidelines", "source": "vercel-labs/agent-skills", "profiles": ["full", "standard"], "description": "UI review against web interface and accessibility guidelines." },
+    { "id": "vskill.next-dev-loop", "kind": "vendored-skill", "skill": "next-dev-loop", "source": "vercel/next.js", "profiles": ["full", "standard"], "prereq": "agent-browser CLI (npm install -g agent-browser)", "description": "Edit and verify loop against a running next dev (MCP plus browser)." },
+    { "id": "vskill.next-cache-components-adoption", "kind": "vendored-skill", "skill": "next-cache-components-adoption", "source": "vercel/next.js", "profiles": ["full"], "description": "Adopt Cache Components across the app." },
+    { "id": "vskill.next-cache-components-optimizer", "kind": "vendored-skill", "skill": "next-cache-components-optimizer", "source": "vercel/next.js", "profiles": ["full"], "description": "Make selected routes navigate instantly under Cache Components." },
+
+    { "id": "ci.core", "kind": "workflow", "file": "workflows/ci.yml", "profiles": ["full", "standard", "lean", "minimal"], "description": "Lint, typecheck, unit tests, build, database reset, pgTAP tests and schema drift check." },
+    { "id": "ci.db-deploy", "kind": "workflow", "file": "workflows/db-deploy.yml", "profiles": ["full", "standard"], "description": "Applies migrations to production from main through a protected environment." },
+    { "id": "ci.claude-review", "kind": "workflow", "file": "workflows/claude-review.yml", "profiles": ["full"], "description": "Claude PR review with the harness reviewers (inactive until the CLAUDE_REVIEW_ENABLED repo variable is true)." },
+    { "id": "ci.dependabot", "kind": "workflow", "file": "dependabot.yml", "profiles": ["full", "standard"], "description": "Weekly dependency and GitHub Actions updates." }
+  ]
+}

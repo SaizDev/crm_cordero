@@ -1,0 +1,28 @@
+# Weekly dependency updates, grouped to keep pull requests reviewable.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      next-react:
+        patterns: ["next", "react", "react-dom", "eslint-config-next", "@types/react*"]
+      supabase:
+        patterns: ["@supabase/*", "supabase"]
+      testing:
+        patterns: ["vitest", "@vitest/*", "@testing-library/*", "@playwright/*", "jsdom", "@axe-core/*"]
+      tooling:
+        patterns: ["eslint*", "prettier*", "typescript", "@types/*", "tailwindcss", "@tailwindcss/*"]
+    labels: ["dependencies"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: ["dependencies", "ci"]

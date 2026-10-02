@@ -1,0 +1,49 @@
+# Claude review of pull requests using the harness reviewers (code-reviewer and security-auditor).
+# Inactive until you opt in:
+#   1. Repository secret ANTHROPIC_API_KEY (or CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`).
+#   2. Repository variable CLAUDE_REVIEW_ENABLED = true.
+# The job never pushes code; it posts one review comment plus inline comments.
+name: Claude review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: ${{ vars.CLAUDE_REVIEW_ENABLED == 'true' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are reviewing a pull request in a spec-first project. Do not modify files, do not commit.
+            1. Identify the spec from the branch name or PR description (specs/NNN-slug) and read spec.md, design.md and tasks.md.
+            2. Delegate two read-only reviews in parallel with the Agent tool:
+               - code-reviewer: spec conformance, correctness, architecture boundaries (AGENTS.md), types, tests.
+               - security-auditor: authentication, authorization and RLS, secrets, input validation, headers, dependencies.
+               The harness hooks require each brief to contain the lines Spec:, Task:, Goal:, Inputs:,
+               Deliverables:, Acceptance: and Constraints:. Deliverables: findings in the Handoff only, no file changes.
+            3. Post inline comments for concrete findings (file and line) and one summary comment with a table:
+               ID, severity, location, problem, recommendation, and the overall verdict of each reviewer.
+          claude_args: |
+            --allowedTools "Agent,Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment"

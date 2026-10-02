@@ -1,0 +1,113 @@
+{
+  "$comment": "Harness control panel. Change it with `pnpm harness <command>` (see .claude/harness/README.md) and then run `pnpm harness render`.",
+  "profile": "full",
+  "modelPreset": "balanced",
+  "overrides": {
+    "enable": [],
+    "disable": []
+  },
+  "stack": {
+    "packageManager": "pnpm",
+    "pnpmVersion": "10.34.6",
+    "supabase": {
+      "projectRef": "lumdcicucgjwtccycxtk"
+    },
+    "vercel": {
+      "team": "",
+      "project": ""
+    }
+  },
+  "policies": {
+    "specGate": {
+      "mode": "strict",
+      "approval": "human",
+      "allowedStatuses": [
+        "approved",
+        "in-progress",
+        "implemented"
+      ],
+      "requireDesignFor": [
+        "feature"
+      ],
+      "gatedPaths": [
+        "src/**",
+        "supabase/migrations/**",
+        "supabase/functions/**",
+        "supabase/seed.sql",
+        "supabase/seeds/**",
+        "supabase/tests/**",
+        "tests/**",
+        "e2e/**",
+        "db/**",
+        "public/**",
+        "next.config.*",
+        "vercel.json",
+        "vercel.ts"
+      ]
+    },
+    "ownership": {
+      "mode": "enforce"
+    },
+    "delegation": {
+      "requireBrief": true,
+      "briefFields": [
+        "Spec:",
+        "Task:",
+        "Deliverables:"
+      ]
+    },
+    "handoff": {
+      "required": true
+    },
+    "stopGate": {
+      "dbDrift": "block",
+      "typecheck": true,
+      "lint": true,
+      "reviewAfterCodeChange": true,
+      "reviewers": [
+        "code-reviewer"
+      ],
+      "securityReviewPaths": [
+        "src/server/**",
+        "src/app/api/**",
+        "src/lib/supabase/**",
+        "src/proxy.*",
+        "src/middleware.*",
+        "supabase/migrations/**",
+        "supabase/functions/**"
+      ],
+      "maxBlocksPerTurn": 2,
+      "commandTimeoutSec": 240
+    },
+    "bashGuard": {
+      "blockPushToDefaultBranch": true,
+      "defaultBranches": [
+        "main",
+        "master"
+      ]
+    },
+    "migrations": {
+      "immutableAfterCommit": true,
+      "exposedSchemas": [
+        "public"
+      ],
+      "requireRls": true
+    },
+    "format": {
+      "enabled": true,
+      "exclude": [
+        "specs/**",
+        "docs/**",
+        ".claude/**",
+        "supabase/**",
+        "db/**",
+        "**/*.md",
+        "pnpm-lock.yaml"
+      ]
+    },
+    "notify": {
+      "terminal": true,
+      "macos": true
+    }
+  }
+}

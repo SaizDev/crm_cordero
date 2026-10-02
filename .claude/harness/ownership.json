@@ -1,0 +1,84 @@
+{
+  "$comment": "Path ownership for delegation enforcement. First matching zone wins, so keep specific zones above general ones. Owners: agent names, '@group', 'main' (the orchestrator session) or '*' (anyone). 'main': 'ask' means the main agent may edit after you confirm; subagents are denied. Disabled agents are replaced by their catalog fallbacks at runtime.",
+  "version": 1,
+  "groups": {
+    "engineers": [
+      "solution-architect",
+      "database-architect",
+      "backend-engineer",
+      "frontend-engineer",
+      "ux-ui-designer",
+      "qa-engineer",
+      "devops-engineer"
+    ],
+    "reviewers": ["qa-engineer", "security-auditor", "code-reviewer"]
+  },
+  "testFiles": {
+    "patterns": ["**/*.test.{ts,tsx,js,jsx,mts,mjs}", "**/*.spec.{ts,tsx,js,jsx,mts,mjs}", "**/__tests__/**"],
+    "extraOwners": ["qa-engineer"]
+  },
+  "zones": [
+    { "id": "env-files", "paths": [".env", ".env.*", "**/.env", "**/.env.*"], "except": [".env.example", "**/.env.example"], "owners": [], "reason": "Environment files hold secrets. Only humans edit them (template: .env.example)." },
+    { "id": "harness-state", "paths": [".claude/harness/state/**", ".claude/agent-memory/**"], "owners": ["*"] },
+    { "id": "harness", "paths": [".claude/**", "CLAUDE.md", "AGENTS.md", ".mcp.json", "scripts/harness/**", "specs/_templates/**", "specs/README.md", "skills-lock.json"], "owners": ["main"], "main": "ask", "reason": "Harness configuration and instructions. Changes need your confirmation." },
+
+    { "id": "spec-product", "paths": ["specs/product/**", "specs/_examples/**"], "owners": ["product-manager"] },
+    { "id": "spec-roadmap", "paths": ["specs/roadmap.md"], "owners": ["product-manager", "main"] },
+    { "id": "spec-requirements", "paths": ["specs/[0-9]*/spec.md"], "owners": ["product-manager"] },
+    { "id": "spec-design", "paths": ["specs/[0-9]*/design.md"], "owners": ["solution-architect"] },
+    { "id": "spec-api", "paths": ["specs/[0-9]*/api.md"], "owners": ["solution-architect", "backend-engineer"] },
+    { "id": "spec-data-model", "paths": ["specs/[0-9]*/data-model.md"], "owners": ["database-architect"] },
+    { "id": "spec-ui", "paths": ["specs/[0-9]*/ui.md"], "owners": ["ux-ui-designer"] },
+    { "id": "spec-test-plan", "paths": ["specs/[0-9]*/test-plan.md"], "owners": ["qa-engineer"] },
+    { "id": "spec-tasks", "paths": ["specs/[0-9]*/tasks.md"], "owners": ["solution-architect", "main"] },
+    { "id": "spec-review-qa", "paths": ["specs/[0-9]*/reviews/qa-*.md"], "owners": ["qa-engineer"] },
+    { "id": "spec-review-security", "paths": ["specs/[0-9]*/reviews/security-*.md"], "owners": ["security-auditor"] },
+    { "id": "spec-review-code", "paths": ["specs/[0-9]*/reviews/code-review*.md"], "owners": ["code-reviewer"] },
+    { "id": "spec-reviews", "paths": ["specs/[0-9]*/reviews/**"], "owners": ["@reviewers", "solution-architect"] },
+    { "id": "spec-release-notes", "paths": ["specs/[0-9]*/release-notes.md"], "owners": ["technical-writer", "devops-engineer"] },
+    { "id": "spec-other", "paths": ["specs/[0-9]*/**", "specs/**"], "owners": ["product-manager", "solution-architect"] },
+
+    { "id": "db-migrations", "paths": ["supabase/migrations/**", "supabase/schemas/**"], "owners": ["database-architect"] },
+    { "id": "db-tests", "paths": ["supabase/tests/**"], "owners": ["database-architect", "qa-engineer"] },
+    { "id": "db-seed", "paths": ["supabase/seed.sql", "supabase/seeds/**"], "owners": ["database-architect"] },
+    { "id": "edge-functions", "paths": ["supabase/functions/**"], "owners": ["backend-engineer"] },
+    { "id": "supabase-config", "paths": ["supabase/config.toml"], "owners": ["database-architect", "devops-engineer"] },
+    { "id": "supabase-other", "paths": ["supabase/**"], "owners": ["database-architect"] },
+    { "id": "db-portability", "paths": ["db/**", "scripts/db/**"], "owners": ["database-architect"] },
+    { "id": "db-types", "paths": ["src/types/database.types.ts"], "owners": ["database-architect"] },
+
+    { "id": "server", "paths": ["src/server/**"], "owners": ["backend-engineer"] },
+    { "id": "route-handlers", "paths": ["src/app/api/**", "src/app/**/route.{ts,js}", "src/app/**/actions.{ts,js}"], "owners": ["backend-engineer"] },
+    { "id": "supabase-clients", "paths": ["src/lib/supabase/**"], "owners": ["backend-engineer"] },
+    { "id": "shared-validation", "paths": ["src/lib/validation/**"], "owners": ["backend-engineer", "frontend-engineer"] },
+    { "id": "edge-proxy", "paths": ["src/proxy.{ts,js}", "src/middleware.{ts,js}"], "owners": ["backend-engineer"] },
+    { "id": "runtime-config", "paths": ["src/instrumentation*.{ts,js}", "src/env.{ts,mjs,js}"], "owners": ["backend-engineer", "devops-engineer"] },
+
+    { "id": "design-tokens", "paths": ["src/app/globals.css", "src/styles/**"], "owners": ["ux-ui-designer"] },
+    { "id": "ui-primitives", "paths": ["src/components/ui/**"], "owners": ["ux-ui-designer"] },
+    { "id": "root-layout", "paths": ["src/app/layout.tsx"], "owners": ["ux-ui-designer", "frontend-engineer"] },
+    { "id": "app-routes", "paths": ["src/app/**"], "owners": ["frontend-engineer", "ux-ui-designer"] },
+    { "id": "components", "paths": ["src/components/**"], "owners": ["frontend-engineer", "ux-ui-designer"] },
+    { "id": "client-state", "paths": ["src/hooks/**", "src/stores/**"], "owners": ["frontend-engineer"] },
+    { "id": "shared-types", "paths": ["src/types/**", "src/lib/**"], "owners": ["backend-engineer", "frontend-engineer"] },
+    { "id": "src-other", "paths": ["src/**"], "owners": ["backend-engineer", "frontend-engineer"] },
+    { "id": "static-assets", "paths": ["public/**", "components.json"], "owners": ["ux-ui-designer", "frontend-engineer"] },
+
+    { "id": "tests", "paths": ["tests/**", "e2e/**", "playwright.config.*", "vitest.config.*", "vitest.setup.*"], "owners": ["qa-engineer", "devops-engineer"] },
+
+    { "id": "ci", "paths": [".github/**"], "owners": ["devops-engineer"] },
+    { "id": "platform", "paths": ["vercel.json", "vercel.ts", ".env.example", ".nvmrc", ".npmrc", "pnpm-workspace.yaml", "Dockerfile", "docker-compose*.yml"], "owners": ["devops-engineer", "backend-engineer"] },
+    { "id": "scripts", "paths": ["scripts/**"], "owners": ["devops-engineer"] },
+
+    { "id": "build-config", "paths": ["next.config.*", "tsconfig*.json", "eslint.config.*", ".prettierrc*", ".prettierignore", "postcss.config.*", "biome.json"], "owners": ["solution-architect", "frontend-engineer", "backend-engineer", "devops-engineer"] },
+    { "id": "dependencies", "paths": ["package.json", "pnpm-lock.yaml"], "owners": ["@engineers"] },
+
+    { "id": "docs-architecture", "paths": ["docs/architecture/**"], "owners": ["solution-architect"] },
+    { "id": "docs-security", "paths": ["docs/security/**"], "owners": ["security-auditor"] },
+    { "id": "docs-design", "paths": ["docs/design/**"], "owners": ["ux-ui-designer"] },
+    { "id": "docs-runbooks", "paths": ["docs/runbooks/**"], "owners": ["devops-engineer"] },
+    { "id": "docs", "paths": ["docs/**"], "owners": ["technical-writer", "solution-architect"] },
+    { "id": "project-docs", "paths": ["README.md", "CHANGELOG.md", "CONTRIBUTING.md"], "owners": ["technical-writer"] }
+  ],
+  "default": { "owners": ["*"] }
+}
