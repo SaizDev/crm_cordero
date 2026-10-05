@@ -17,6 +17,19 @@ updates:
       tooling:
         patterns: ["eslint*", "prettier*", "typescript", "@types/*", "tailwindcss", "@tailwindcss/*"]
     labels: ["dependencies"]
+    # Hold majors of these three tooling packages (spec 001):
+    # - typescript 7 is not supported by typescript-eslint 8, used by eslint-config-next.
+    # - eslint 10 is tied to the same Next.js lint toolchain.
+    # - @types/node must match the Node major pinned in .nvmrc (22).
+    # Minor and patch updates still arrive in the "tooling" group.
+    # A dedicated upgrade spec lifts a rule when the toolchain supports the new major.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
