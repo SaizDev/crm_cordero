@@ -75,6 +75,18 @@ runtime files changed.
   source; Next.js production dependencies unaffected. Needs human sign-off if the hold lasts past
   the first production release. Not a medium, so no register entry is required by the verdict rules.
 
+## Accepted risks
+| Field | Value |
+|---|---|
+| Finding | F-002 (low, dev-only): ESLint 9 reached end-of-life on 2026-08-06. Holding the `eslint` major (ignore rule in `.github/dependabot.yml`, `"eslint": "^9"` in `package.json`) means no further security fixes for the lint engine. |
+| Decision | Accepted as a time-boxed risk. |
+| Accepted by | Ernesto Del Palacio Saiz (human), by typing "accept F-002" in the chat. |
+| Date | 2026-10-05 |
+| Scope | The `eslint` 9.x lint engine only, used in local development, CI and the Vercel build on first-party source. Does not cover F-001, F-004, any runtime or production dependency, or the TypeScript and `@types/node` holds. |
+| Compensating controls | Dev-only package, absent from the production bundle; runs only on the project's own source, not on untrusted input. |
+| Expires / revisit trigger | Ends when the ESLint 10 / TypeScript upgrade spec lifts the hold. Must be revisited before the first production release, whichever comes first. |
+| Register entry | `docs/security/accepted-risks.md`, row AR-001. |
+
 ## Verdict
 approve. The change only blocks semver-major version updates for three dev-only packages, does
 not restrict minor or patch updates, and per the Dependabot engine does not apply to security

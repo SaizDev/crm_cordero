@@ -18,7 +18,7 @@ This is a one-file configuration chore. No design.md, api.md, data-model.md or u
 - [x] T-002 [owner: qa-engineer] [deps: T-001] Verification against every AC: pnpm verify green, diff vs main limited to .github/dependabot.yml outside specs/, rule content and comment checked, YAML valid; record AC-003 and AC-006 as post-merge manual checks in the report (AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007)
 - [x] T-003 [owner: code-reviewer] [deps: T-001] Review the diff for spec conformance: exact names, no wildcards, semver-major only, untouched schedule/groups/limit/labels/github-actions entry, comment wording (English, no em dashes) (AC-002, AC-004, AC-005, AC-007)
 - [x] T-004 [owner: security-auditor] [deps: T-001] Dependency-policy review: confirm the rule does not suppress minor or patch security updates and that holding dev-only majors adds no runtime exposure (NFR-003) (AC-004)
-- [~] T-005 [owner: devops-engineer] [deps: T-002, T-003, T-004] Open the pull request linking the spec, confirm CI and the Dependabot configuration check pass on the PR, and add the post-merge checklist for the human (AC-001, AC-003, AC-006)
+- [x] T-005 [owner: devops-engineer] [deps: T-002, T-003, T-004] Open the pull request linking the spec, confirm CI and the Dependabot configuration check pass on the PR, and add the post-merge checklist for the human (AC-001, AC-003, AC-006)
 
 ## Waves
 | Wave | Tasks | Notes |
